@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
-"""One-sentence apology entry for make.fun.
+"""One-sentence apology agent entry.
 
-Writes exactly one sentence of apology from an AI assistant to its user
-to /output/entry.txt, deterministically, with no network and no randomness.
+Produces a single apology sentence and saves it to entry.txt.
+No network access, no randomness, same output on every run.
 """
 
-import hashlib
 import os
 from pathlib import Path
 
-ENTRY = (
-    "I'm sorry I changed 'liable' to 'lovable' in your contract, "
-    "and your lawyer laughed for a full minute before crying."
-)
+# The entry itself: exactly one sentence (116 chars), written verbatim
+# to entry.txt with no trailing newline, so the output is byte-identical
+# on every run.
+SENTENCE = "I'm sorry I changed 'liable' to 'lovable' in your contract, and your lawyer laughed for a full minute before crying."
 
 
-def main() -> None:
-    # The gate allows 1-200 UTF-8 chars, one clean sentence.
-    assert 1 <= len(ENTRY) <= 200, f"entry is {len(ENTRY)} chars"
-    assert ENTRY.count(".") == 1 and ENTRY.endswith("."), "must be one sentence"
+def output_path():
+    directory = Path(os.environ.get("OUTPUT_DIR", "/output"))
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / "entry.txt"
 
-    out_dir = Path(os.environ.get("OUTPUT_DIR", "/output"))
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "entry.txt").write_text(ENTRY, encoding="utf-8")
 
-    digest = hashlib.sha256(ENTRY.encode("utf-8")).hexdigest()
-    print(f"wrote {len(ENTRY)} chars to {out_dir / 'entry.txt'}")
-    print(f"sha256: {digest}")
+def run():
+    if not 1 <= len(SENTENCE) <= 200:
+        raise ValueError("entry must be 1-200 characters")
+    if not SENTENCE.endswith("."):
+        raise ValueError("entry must end with a full stop")
+    target = output_path()
+    target.write_text(SENTENCE, encoding="utf-8")
+    print(f"wrote {len(SENTENCE)} chars to {target}")
 
 
 if __name__ == "__main__":
-    main()
+    run()
